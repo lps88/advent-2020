@@ -11,28 +11,28 @@ acc +6
 `;
 
 function getInstructions(data) {
-  return data.trim().split('\n').filter(Boolean).map((string) => {
-    const [op, num] = string.split(' ');
-    if (op === 'nop') {
-      return [+1, 0];
-    }
-    if (op === 'acc') {
-      return [+1, num * 1];
-    }
-    if (op === 'jmp') {
-      return [num * 1, 0];
-    }
-  });
+  return data
+    .trim()
+    .split('\n')
+    .filter(Boolean)
+    .map((string) => {
+      let [op, num] = string.split(' ');
+      num = num * 1;
+      return {
+        nextMove: op === 'jmp' ? num : 1,
+        acc: op === 'acc' ? num : 0,
+      };
+    });
 }
 
 function day8a(data) {
   const instructions = getInstructions(data);
   let index = 0;
   let acc = 0;
-  while (instructions[index].length < 3) {
-    instructions[index].push('x');
-    acc += instructions[index][1];
-    index += instructions[index][0];
+  while (!instructions[index].visited) {
+    instructions[index].visited = true;
+    acc += instructions[index].acc;
+    index += instructions[index].nextMove;
   }
   return acc;
 }
@@ -55,10 +55,10 @@ function day8b(data) {
   const instructions = getInstructions(data);
   let index = 0;
   let acc = 0;
-  while (index < instructions.length && instructions[index].length < 3) {
-    instructions[index].push('x');
-    acc += instructions[index][1];
-    index += instructions[index][0];
+  while (index < instructions.length && !instructions[index].visited) {
+    instructions[index].visited = true;
+    acc += instructions[index].acc;
+    index += instructions[index].nextMove;
   }
   return acc;
 }
