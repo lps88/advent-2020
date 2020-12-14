@@ -8,44 +8,53 @@ F11
 
 const compass = 'NESW';
 
-function move(start, instruction) {
-  let [_, action, num] = /([NSEWLRF])(\d+)/.exec(instruction);
-  num = num * 1;
+function toInstruction(action, num) {
+  const noop = {
+    moveNS: 0,
+    moveEW: 0,
+    changeDirection: 0,
+    goForward: 0,
+  };
   switch (action) {
     case 'N':
-      return {
-        ...start,
-        ns: start.ns + num,
-      };
+      return { ...noop, moveNS: num };
     case 'S':
-      return {
-        ...start,
-        ns: start.ns - num,
-      };
+      return { ...noop, moveNS: -num };
     case 'E':
-      return {
-        ...start,
-        ew: start.ew + num,
-      };
+      return { ...noop, moveEW: num };
     case 'W':
-      return {
-        ...start,
-        ew: start.ew - num,
-      };
+      return { ...noop, moveEW: -num };
     case 'L':
+      return { ...noop, changeDirection: 4 - num / 90 };
     case 'R':
-      const rotation = action === 'L' ? 4 - num / 90 : num / 90;
-      return {
-        ...start,
-        direction: (start.direction + rotation) % 4,
-      };
-    case 'F':
-      return move(start, compass[start.direction] + num);
+      return { ...noop, changeDirection: num / 90 };
+    default:
+      return { ...noop, goForward: num };
   }
 }
 
+function move(start, instruction) {
+  if (instruction.goForward) {
+    return move(
+      start,
+      toInstruction(compass[start.direction], instruction.goForward)
+    );
+  }
+  return {
+    ns: start.ns + instruction.moveNS,
+    ew: start.ew + instruction.moveEW,
+    direction: (start.direction + instruction.changeDirection) % 4,
+  };
+}
+
 function day12a(data) {
-  let instructions = data.trim().split('\n');
+  let instructions = data
+    .trim()
+    .split('\n')
+    .map((i) => {
+      const [_, action, num] = /([NSEWLRF])(\d+)/.exec(i);
+      return toInstruction(action, num * 1);
+    });
   let position = {
     ns: 0,
     ew: 0,
